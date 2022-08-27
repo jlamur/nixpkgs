@@ -43,9 +43,9 @@
 } @ args:
 
 let
-  version = "2.35";
-  patchSuffix = "-163";
-  sha256 = "sha256-USNzL2tnzNMZMF79OZlx1YWSEivMKmUYob0lEN0M9S4=";
+  version = "2.36";
+  patchSuffix = "-48";
+  sha256 = "sha256-HJWf6iQJBiJgYstLHn685xqfDjwINsCefjQj1DT8/nU=";
 in
 
 assert withLinuxHeaders -> linuxHeaders != null;
@@ -62,14 +62,14 @@ stdenv.mkDerivation ({
   patches =
     [
       /* No tarballs for stable upstream branch, only https://sourceware.org/git/glibc.git and using git would complicate bootstrapping.
-          $ git fetch --all -p && git checkout origin/release/2.35/master && git describe
-          glibc-2.35-210-ge123f08ad5
-          $ git show --minimal --reverse glibc-2.35.. | gzip -9n --rsyncable - > 2.35-master.patch.gz
+          $ git fetch --all -p && git checkout origin/release/2.36/master && git describe
+          glibc-2.36-48-gcdc496eb55
+          $ git show --minimal --reverse glibc-2.36.. | gzip -9n --rsyncable - > 2.36-master.patch.gz
 
          To compare the archive contents zdiff can be used.
-          $ zdiff -u 2.35-master.patch.gz ../nixpkgs/pkgs/development/libraries/glibc/2.35-master.patch.gz
+          $ zdiff -u 2.36-master.patch.gz ../nixpkgs/pkgs/development/libraries/glibc/2.36-master.patch.gz
        */
-      ./2.35-master.patch.gz
+      ./2.36-master.patch.gz
 
       /* Allow NixOS and Nix to handle the locale-archive. */
       ./nix-locale-archive.patch
@@ -84,25 +84,6 @@ stdenv.mkDerivation ({
          "/bin:/usr/bin", which is inappropriate on NixOS machines. This
          patch extends the search path by "/run/current-system/sw/bin". */
       ./fix_path_attribute_in_getconf.patch
-
-      /* Allow running with RHEL 6 -like kernels.  The patch adds an exception
-        for glibc to accept 2.6.32 and to tag the ELFs as 2.6.32-compatible
-        (otherwise the loader would refuse libc).
-        Note that glibc will fully work only on their heavily patched kernels
-        and we lose early mismatch detection on 2.6.32.
-
-        On major glibc updates we should check that the patched kernel supports
-        all the required features.  ATM it's verified up to glibc-2.26-131.
-        # HOWTO: check glibc sources for changes in kernel requirements
-        git log -p glibc-2.25.. sysdeps/unix/sysv/linux/x86_64/kernel-features.h sysdeps/unix/sysv/linux/kernel-features.h
-        # get kernel sources (update the URL)
-        mkdir tmp && cd tmp
-        curl http://vault.centos.org/6.9/os/Source/SPackages/kernel-2.6.32-696.el6.src.rpm | rpm2cpio - | cpio -idmv
-        tar xf linux-*.bz2
-        # check syscall presence, for example
-        less linux-*?/arch/x86/kernel/syscall_table_32.S
-       */
-      ./allow-kernel-2.6.32.patch
 
       /* Provide a fallback for missing prlimit64 syscall on RHEL 6 -like
          kernels.
