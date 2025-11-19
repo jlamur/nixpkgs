@@ -119,13 +119,17 @@ let
     let
       checksum =
         pkg.checksum or parsedLockFile.metadata."checksum ${pkg.name} ${pkg.version} (${pkg.source})";
+      url = (import ./crate-download-url.nix { inherit lib; }) (pkg // {
+        inherit downloadUrl;
+        sha256 = checksum;
+      });
     in
     assert lib.assertMsg (checksum != null) ''
       Package ${pkg.name} does not have a checksum.
     '';
     fetchurl {
+      inherit url;
       name = "crate-${pkg.name}-${pkg.version}.tar.gz";
-      url = "${downloadUrl}/${pkg.name}/${pkg.version}/download";
       sha256 = checksum;
     };
 
